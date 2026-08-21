@@ -4,6 +4,7 @@ pipeline {
 
     environment {
         APP_IMAGE = 'food-delivery-app'
+        FRONTEND_IMAGE = 'food-delivery-frontend'
         IMAGE_TAG = "${BUILD_NUMBER}"
 
         SONAR_PROJECT_KEY = 'Food_Delivery_Application'
@@ -22,6 +23,10 @@ pipeline {
         stage('Check Tools') {
             steps {
                 sh '''
+                    echo "=============================="
+                    echo "Checking Installed Tools"
+                    echo "=============================="
+
                     echo "Java:"
                     java -version
 
@@ -36,6 +41,8 @@ pipeline {
 
                     echo "Docker Compose:"
                     docker compose version
+
+                    echo "=============================="
                 '''
             }
         }
@@ -96,34 +103,88 @@ pipeline {
 
         stage('Docker Build') {
             steps {
+                sh '''
+                    echo "=============================="
+                    echo "Building Backend Docker Image"
+                    echo "=============================="
 
-                sh """
                     docker build \
-                    -t ${APP_IMAGE}:${IMAGE_TAG} \
-                    -t ${APP_IMAGE}:latest \
-                    .
-                """
+                        -t ${APP_IMAGE}:${IMAGE_TAG} \
+                        -t ${APP_IMAGE}:latest \
+                        .
+
+                    echo "=============================="
+                    echo "Building Frontend Docker Image"
+                    echo "=============================="
+
+                    docker build \
+                        -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
+                        -t ${FRONTEND_IMAGE}:latest \
+                        ./frontend
+
+                    echo "=============================="
+                    echo "Docker Images"
+                    echo "=============================="
+
+                    docker images | grep -E "food-delivery-app|food-delivery-frontend"
+                '''
             }
         }
 
         stage('Deploy MongoDB + Application') {
             steps {
+                sh '''
+                    echo "=============================="
+                    echo "Stopping Previous Deployment"
+                    echo "=============================="
 
-                sh """
+                    IMAGE_TAG=${IMAGE_TAG} docker compose down
+
+                    echo "=============================="
+                    echo "Starting MongoDB + Backend + Frontend"
+                    echo "=============================="
+
                     IMAGE_TAG=${IMAGE_TAG} docker compose up -d
-                """
+
+                    echo "=============================="
+                    echo "Deployment Started"
+                    echo "=============================="
+                '''
             }
         }
 
         stage('Verify Deployment') {
             steps {
-
                 sh '''
+                    echo "=============================="
+                    echo "Docker Compose Status"
+                    echo "=============================="
+
                     docker compose ps
 
-                    echo "--------------------------------"
+                    echo "=============================="
+                    echo "Running Containers"
+                    echo "=============================="
 
                     docker ps
+
+                    echo "=============================="
+                    echo "Application URLs"
+                    echo "=============================="
+
+                    echo "Frontend:"
+                    echo "http://44.198.52.77:3000"
+
+                    echo "Backend:"
+                    echo "http://44.198.52.77:5000"
+
+                    echo "SonarQube:"
+                    echo "http://44.198.52.77:9000"
+
+                    echo "Jenkins:"
+                    echo "http://44.198.52.77:8080"
+
+                    echo "=============================="
                 '''
             }
         }
@@ -134,8 +195,15 @@ pipeline {
         success {
             echo '========================================'
             echo 'BUILD SUCCESSFUL'
+            echo '========================================'
             echo 'SONARQUBE QUALITY GATE PASSED'
-            echo 'DOCKER DEPLOYMENT SUCCESSFUL'
+            echo 'DOCKER IMAGES BUILT SUCCESSFULLY'
+            echo 'MONGODB DEPLOYED'
+            echo 'BACKEND DEPLOYED'
+            echo 'FRONTEND DEPLOYED'
+            echo '========================================'
+            echo 'Food Delivery Application:'
+            echo 'http://44.198.52.77:3000'
             echo '========================================'
         }
 
