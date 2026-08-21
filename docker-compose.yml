@@ -11,9 +11,10 @@ services:
     networks:
       - food-delivery-network
 
-  app:
+
+  backend:
     image: food-delivery-app:${IMAGE_TAG:-latest}
-    container_name: food-delivery-app
+    container_name: food-delivery-backend
     restart: unless-stopped
 
     depends_on:
@@ -30,8 +31,22 @@ services:
     networks:
       - food-delivery-network
 
+
+  frontend:
+    image: food-delivery-frontend:${IMAGE_TAG:-latest}
+    container_name: food-delivery-frontend
+    restart: unless-stopped
+
+    ports:
+      - "3000:80"
+
+    networks:
+      - food-delivery-network
+
+
 volumes:
   mongo-data:
+
 
 networks:
   food-delivery-network:
