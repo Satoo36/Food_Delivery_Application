@@ -66,16 +66,20 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
+                script {
 
-                withSonarQubeEnv('SonarQube') {
+                    def scannerHome = tool 'SonarScanner'
 
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.projectName=${SONAR_PROJECT_NAME} \
-                        -Dsonar.sources=. \
-                        -Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/coverage/**
-                    '''
+                    withSonarQubeEnv('SonarQube') {
+
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                            -Dsonar.projectName=${SONAR_PROJECT_NAME} \
+                            -Dsonar.sources=. \
+                            -Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/coverage/**
+                        """
+                    }
                 }
             }
         }
@@ -116,7 +120,9 @@ pipeline {
 
                 sh '''
                     docker compose ps
+
                     echo "--------------------------------"
+
                     docker ps
                 '''
             }
