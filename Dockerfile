@@ -11,6 +11,9 @@ COPY backend ./backend
 ENV NODE_ENV=production
 ENV PORT=5000
 
+# Run application as non-root user
+USER node
+
 EXPOSE 5000
 
 CMD ["node", "backend/server.js"]
